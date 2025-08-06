@@ -5,7 +5,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # Python
-
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
 
 # macOS
 .DS_Store
