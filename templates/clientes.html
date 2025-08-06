@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Clientes - Renta de Autos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Clientes</h2>
+  <a class="btn btn-primary" href="{{ url_for('nuevo_cliente') }}">Nuevo Cliente</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Apellido</th>
+      <th>Teléfono</th>
+      <th>Dirección</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in clientes %}
+    <tr>
+      <td>{{ c.nombre }}</td>
+      <td>{{ c.apellido }}</td>
+      <td>{{ c.telefono }}</td>
+      <td>{{ c.direccion }}</td>
+      <td>
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('editar_cliente', cliente_id=c._id) }}">Editar</a>
+        <form action="{{ url_for('eliminar_cliente', cliente_id=c._id) }}" method="post" style="display:inline-block" onsubmit="return confirm('¿Deseas eliminar este cliente?');">
+          <input type="hidden" name="_method" value="DELETE">
+          <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

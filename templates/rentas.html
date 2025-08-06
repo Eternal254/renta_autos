@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Rentas - Renta de Autos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Rentas</h2>
+  <a class="btn btn-primary" href="{{ url_for('nueva_renta') }}">Nueva Renta</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Auto</th>
+      <th>Cliente</th>
+      <th>Inicio</th>
+      <th>Fin</th>
+      <th>Costo</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rentas %}
+    <tr>
+      <td>{{ r.auto if r.auto else r.auto_id }}</td>
+      <td>{{ r.cliente if r.cliente else r.cliente_id }}</td>
+      <td>{{ r.fecha_inicio }}</td>
+      <td>{{ r.fecha_fin if r.fecha_fin else '-' }}</td>
+      <td>${{ '%.2f'|format(r.costo) }}</td>
+      <td>{{ r.estado }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

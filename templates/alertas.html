@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Alertas - Renta de Autos{% endblock %}
+
+{% block content %}
+<h2>Alertas de vehículos devueltos en mal estado</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Auto</th>
+      <th>Fecha de alerta</th>
+      <th>Condición</th>
+      <th>Descripción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in alertas %}
+    <tr>
+      <td>{{ a.auto if a.auto else a.auto_id }}</td>
+      <td>{{ a.fecha_alerta }}</td>
+      <td>{{ a.condicion }}</td>
+      <td>{{ a.descripcion }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

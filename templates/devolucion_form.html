@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar devolución - Renta de Autos{% endblock %}
+
+{% block content %}
+<h2>Registrar devolución</h2>
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Renta</label>
+    <select class="form-select" name="renta_id" required>
+      <option value="" selected>Seleccione una renta activa</option>
+      {% for r in rentas %}
+        <option value="{{ r._id }}">{{ r._id }} - {{ r.auto_id }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Condición</label>
+    <select class="form-select" name="condicion" required>
+      <option value="bueno">Bueno</option>
+      <option value="malo">Malo</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Observaciones (opcional)</label>
+    <textarea class="form-control" name="observaciones" rows="3"></textarea>
+  </div>
+  <button type="submit" class="btn btn-success">Registrar</button>
+  <a class="btn btn-secondary" href="{{ url_for('listar_devoluciones_html') }}">Cancelar</a>
+</form>
+{% endblock %}

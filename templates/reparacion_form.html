@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar reparación - Renta de Autos{% endblock %}
+
+{% block content %}
+<h2>Registrar reparación</h2>
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Auto</label>
+    <select class="form-select" name="auto_id" required>
+      <option value="" selected>Seleccione un auto</option>
+      {% for auto in autos %}
+        <option value="{{ auto._id }}">{{ auto.marca }} {{ auto.modelo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Descripción</label>
+    <textarea class="form-control" name="descripcion" rows="3" required></textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Fecha (AAAA-MM-DD)</label>
+    <input type="date" class="form-control" name="fecha" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Costo</label>
+    <input type="number" step="0.01" class="form-control" name="costo" required>
+  </div>
+  <button type="submit" class="btn btn-success">Registrar</button>
+  <a class="btn btn-secondary" href="{{ url_for('listar_reparaciones_html') }}">Cancelar</a>
+</form>
+{% endblock %}

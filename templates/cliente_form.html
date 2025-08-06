@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Editar cliente' if cliente else 'Nuevo cliente' }} - Renta de Autos{% endblock %}
+
+{% block content %}
+<h2>{{ 'Editar cliente' if cliente else 'Nuevo cliente' }}</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Nombre</label>
+    <input type="text" class="form-control" name="nombre" value="{{ cliente.nombre if cliente }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Apellido</label>
+    <input type="text" class="form-control" name="apellido" value="{{ cliente.apellido if cliente }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Teléfono</label>
+    <input type="text" class="form-control" name="telefono" value="{{ cliente.telefono if cliente }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Dirección</label>
+    <input type="text" class="form-control" name="direccion" value="{{ cliente.direccion if cliente }}">
+  </div>
+  <button type="submit" class="btn btn-success">Guardar</button>
+  <a class="btn btn-secondary" href="{{ url_for('listar_clientes_html') }}">Cancelar</a>
+</form>
+{% endblock %}

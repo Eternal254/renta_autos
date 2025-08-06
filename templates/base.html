@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Renta de Autos{% endblock %}</title>
+  <!-- Carga de Bootstrap vía CDN para una apariencia rápida y atractiva -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('home') }}">Renta de Autos</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_clientes_html') }}">Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_autos_html') }}">Autos</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_reparaciones_html') }}">Reparaciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_rentas_html') }}">Rentas</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_devoluciones_html') }}">Devoluciones</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_alertas_html') }}">Alertas</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="alert alert-info" role="alert">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</div>
+
+<!-- JavaScript de Bootstrap (opcional) para componentes interactivos -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

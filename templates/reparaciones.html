@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Reparaciones - Renta de Autos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Reparaciones</h2>
+  <a class="btn btn-primary" href="{{ url_for('nueva_reparacion') }}">Registrar Reparación</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Auto</th>
+      <th>Descripción</th>
+      <th>Fecha</th>
+      <th>Costo</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in reparaciones %}
+    <tr>
+      <td>{{ r.auto if r.auto else r.auto_id }}</td>
+      <td>{{ r.descripcion }}</td>
+      <td>{{ r.fecha }}</td>
+      <td>${{ '%.2f'|format(r.costo) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

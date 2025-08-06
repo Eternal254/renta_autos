@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Editar auto' if auto else 'Nuevo auto' }} - Renta de Autos{% endblock %}
+
+{% block content %}
+<h2>{{ 'Editar auto' if auto else 'Nuevo auto' }}</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Marca</label>
+    <input type="text" class="form-control" name="marca" value="{{ auto.marca if auto }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Modelo</label>
+    <input type="text" class="form-control" name="modelo" value="{{ auto.modelo if auto }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Año</label>
+    <input type="text" class="form-control" name="anio" value="{{ auto.anio if auto }}" required>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" name="disponible" id="disponibleCheckbox" {% if auto %}{% if auto.disponible %}checked{% endif %}{% else %}checked{% endif %}>
+    <label class="form-check-label" for="disponibleCheckbox">
+      Disponible
+    </label>
+  </div>
+  <button type="submit" class="btn btn-success">Guardar</button>
+  <a class="btn btn-secondary" href="{{ url_for('listar_autos_html') }}">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Devoluciones - Renta de Autos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Devoluciones</h2>
+  <a class="btn btn-primary" href="{{ url_for('nueva_devolucion') }}">Registrar Devolución</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Auto</th>
+      <th>Cliente</th>
+      <th>Fecha devolución</th>
+      <th>Condición</th>
+      <th>Observaciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in devoluciones %}
+    <tr>
+      <td>{{ d.auto if d.auto else d.auto_id }}</td>
+      <td>{{ d.cliente if d.cliente else '' }}</td>
+      <td>{{ d.fecha_devolucion }}</td>
+      <td>{{ d.condicion }}</td>
+      <td>{{ d.observaciones if d.observaciones else '-' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
