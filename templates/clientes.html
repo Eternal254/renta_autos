@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Clientes</h2>
-  <a class="btn btn-primary" href="{{ url_for('nuevo_cliente') }}">Nuevo Cliente</a>
+  {% if session.get('rol') == 'empleado' %}
+    <a class="btn btn-primary" href="{{ url_for('nuevo_cliente') }}">Nuevo Cliente</a>
+  {% endif %}
 </div>
 <table class="table table-striped">
   <thead>
@@ -25,11 +27,14 @@
       <td>{{ c.telefono }}</td>
       <td>{{ c.direccion }}</td>
       <td>
-        <a class="btn btn-sm btn-secondary" href="{{ url_for('editar_cliente', cliente_id=c._id) }}">Editar</a>
-        <form action="{{ url_for('eliminar_cliente', cliente_id=c._id) }}" method="post" style="display:inline-block" onsubmit="return confirm('¿Deseas eliminar este cliente?');">
-          <input type="hidden" name="_method" value="DELETE">
-          <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
-        </form>
+        {% if session.get('rol') == 'empleado' %}
+          <a class="btn btn-sm btn-secondary" href="{{ url_for('editar_cliente', cliente_id=c._id) }}">Editar</a>
+          <form action="{{ url_for('eliminar_cliente', cliente_id=c._id) }}" method="post" style="display:inline-block" onsubmit="return confirm('¿Deseas eliminar este cliente?');">
+            <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
+          </form>
+        {% else %}
+          <span class="text-muted">-</span>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}

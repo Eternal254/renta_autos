@@ -16,12 +16,27 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_clientes_html') }}">Clientes</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_autos_html') }}">Autos</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_reparaciones_html') }}">Reparaciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_rentas_html') }}">Rentas</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_devoluciones_html') }}">Devoluciones</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_alertas_html') }}">Alertas</a></li>
+        {# Se muestran las secciones según el rol del usuario #}
+        {% if session.get('rol') == 'empleado' %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_clientes_html') }}">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_rentas_html') }}">Rentas</a></li>
+        {% endif %}
+        {% if session.get('rol') == 'encargado' %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_autos_html') }}">Autos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_reparaciones_html') }}">Reparaciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_rentas_html') }}">Rentas</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_devoluciones_html') }}">Devoluciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_alertas_html') }}">Alertas</a></li>
+        {% endif %}
+        {% if session.get('rol') == 'dueno' %}
+          {# El dueño solo necesita ver reparaciones y, potencialmente, otras estadísticas. #}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('listar_reparaciones_html') }}">Reparaciones</a></li>
+        {% endif %}
+        {% if session.get('usuario_id') %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Cerrar sesión</a></li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Iniciar sesión</a></li>
+        {% endif %}
       </ul>
     </div>
   </div>

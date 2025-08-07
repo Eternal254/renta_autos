@@ -87,10 +87,33 @@ La aplicación trabaja con varias **colecciones** en la base de datos `renta_aut
 * **RF09** – La ruta `/devoluciones` permite registrar devoluciones de autos y actualizar el estado del vehículo en la colección `autos`.
 * **RF08** – Si al registrar una devolución se indica que el auto está en mal estado (`condicion` = `malo`), se genera un documento de alerta en la colección `alertas`.
 
+### Inicio de sesión y roles de usuario
+
+Desde la versión actual, la aplicación incluye un **sistema de autenticación** básico con roles.  Para empezar a usarlo debes crear usuarios de demostración ejecutando la siguiente ruta una sola vez (desde el navegador o con `curl`):
+
+```bash
+http://127.0.0.1:5000/crear_usuarios_demo
+```
+
+Esto insertará tres usuarios en la colección `usuarios`:
+
+| Usuario    | Contraseña       | Rol       |
+|-----------|------------------|-----------|
+| empleado  | empleado123      | empleado  |
+| encargado | encargado123     | encargado |
+| dueno     | dueno123         | dueno     |
+
+Cada rol tiene permisos diferentes en la interfaz web y en los endpoints REST:
+
+- **empleado**: puede gestionar clientes (`/clientes`), registrar y actualizar rentas (`/rentas`), y consultar autos disponibles.  La navegación web mostrará solo las secciones pertinentes (Clientes y Rentas).
+- **encargado**: puede administrar autos (`/autos`), registrar reparaciones (`/reparaciones`), consultar rentas (`/rentas/lista` y `/rentas/ultimos`), registrar devoluciones (`/devoluciones`) y ver alertas (`/alertas`).
+- **dueno**: su acceso se limita a consultar reparaciones para obtener reportes por periodo y costo (`/reparaciones/lista` y `/reparaciones/consulta`).
+
+Para iniciar sesión, navega a `http://127.0.0.1:5000/login` e introduce el usuario y contraseña correspondientes.  Una vez autenticado, la aplicación recordará tu sesión mediante cookies de Flask.  Puedes cerrar sesión desde la barra de navegación.
+
 ### Limitaciones y tareas no implementadas
 
 * **Automatización de respaldos (backups)** y **registros de log**: Aunque el enunciado menciona tareas automatizadas de respaldo completo semanal, respaldo diferencial diario y log de registros cada dos horas, estas funciones suelen configurarse a nivel de servidor o mediante scripts de sistema.  Para un entorno académico se recomienda utilizar la herramienta `mongodump` para crear respaldos manuales o programar tareas con `cron` (Linux/Mac) o el Programador de tareas (Windows).  PyMongo soporta operaciones de respaldo mediante comandos `dump`, pero su implementación queda fuera del alcance de este código minimalista.  Más información sobre inserción y consulta de datos con PyMongo se encuentra en la documentación oficial【788983236826060†L95-L134】.
-* **Control de permisos y autenticación**: Este proyecto no implementa roles de usuario ni autenticación.  En un entorno real se deberían definir usuarios con permisos adecuados en MongoDB y filtrar el acceso a las rutas según el rol (empleado, encargado, dueño).  Para cumplir el MVP académico se exponen todos los endpoints sin control de acceso.
 
 ## Cómo probar la API
 
