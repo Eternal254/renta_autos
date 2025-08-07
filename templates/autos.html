@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Autos</h2>
-  <a class="btn btn-primary" href="{{ url_for('nuevo_auto') }}">Nuevo Auto</a>
+  {% if session.get('rol') == 'encargado' %}
+    <a class="btn btn-primary" href="{{ url_for('nuevo_auto') }}">Nuevo Auto</a>
+  {% endif %}
 </div>
 <table class="table table-striped">
   <thead>
@@ -25,10 +27,14 @@
       <td>{{ a.anio }}</td>
       <td>{{ 'Sí' if a.disponible else 'No' }}</td>
       <td>
-        <a class="btn btn-sm btn-secondary" href="{{ url_for('editar_auto', auto_id=a._id) }}">Editar</a>
-        <form action="{{ url_for('eliminar_auto', auto_id=a._id) }}" method="post" style="display:inline-block" onsubmit="return confirm('¿Deseas eliminar este auto?');">
-          <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
-        </form>
+        {% if session.get('rol') == 'encargado' %}
+          <a class="btn btn-sm btn-secondary" href="{{ url_for('editar_auto', auto_id=a._id) }}">Editar</a>
+          <form action="{{ url_for('eliminar_auto', auto_id=a._id) }}" method="post" style="display:inline-block" onsubmit="return confirm('¿Deseas eliminar este auto?');">
+            <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
+          </form>
+        {% else %}
+          <span class="text-muted">-</span>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}

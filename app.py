@@ -23,7 +23,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from flask import Flask, jsonify, request, render_template, redirect, url_for
+from flask import Flask, jsonify, request, render_template, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
@@ -41,6 +43,39 @@ from pymongo import MongoClient
 # ---------------------------------------------------------------------------
 
 app = Flask(__name__)
+
+# ---------------------------------------------------------------------------
+# Seguridad y sesiones
+# ---------------------------------------------------------------------------
+# Define una clave secreta para firmar las cookies de sesión.  En un entorno
+# real debería establecerse mediante una variable de entorno.  Aquí
+# proporcionamos un valor predeterminado para que la aplicación funcione sin
+# configuración adicional.
+app.secret_key = "cambiar-esta-clave"
+
+# Decoradores para autenticar y autorizar usuarios
+def login_required(f):
+    """Asegura que el usuario esté autenticado; si no, redirige al login."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'usuario_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def role_required(*roles):
+    """Garantiza que el usuario tenga alguno de los roles permitidos."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'usuario_id' not in session:
+                return redirect(url_for('login'))
+            if session.get('rol') not in roles:
+                return "Acceso denegado", 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # Conectar a MongoDB en localhost sin autenticación.  Cambia la URI según
 # tus necesidades.  La base de datos se llama `renta_autos`.
@@ -106,13 +141,17 @@ def parse_date(date_str: Optional[str]) -> Optional[datetime]:
 # ---------------------------------------------------------------------------
 
 @app.route("/clientes", methods=["GET"])
+@login_required
+@role_required('empleado')
 def listar_clientes() -> Any:
-    """Devuelve la lista completa de clientes."""
+    """Devuelve la lista completa de clientes. Solo para empleados."""
     clientes: List[Dict[str, Any]] = list(db.clientes.find())
     return jsonify([serialize_document(c) for c in clientes]), 200
 
 
 @app.route("/clientes", methods=["POST"])
+@login_required
+@role_required('empleado')
 def crear_cliente() -> Any:
     """Crea un nuevo cliente.
 
@@ -128,6 +167,8 @@ def crear_cliente() -> Any:
 
 
 @app.route("/clientes/<string:cliente_id>", methods=["PUT"])
+@login_required
+@role_required('empleado')
 def actualizar_cliente(cliente_id: str) -> Any:
     """Actualiza un cliente existente identificado por su `_id`.
 
@@ -147,6 +188,8 @@ def actualizar_cliente(cliente_id: str) -> Any:
 
 
 @app.route("/clientes/<string:cliente_id>", methods=["DELETE", "POST"])
+@login_required
+@role_required('empleado')
 def eliminar_cliente(cliente_id: str) -> Any:
     """Elimina un cliente por su identificador."""
     try:
@@ -167,13 +210,17 @@ def eliminar_cliente(cliente_id: str) -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/autos", methods=["GET"])
+@login_required
+@role_required('empleado', 'encargado')
 def listar_autos() -> Any:
-    """Devuelve la lista de todos los autos."""
+    """Devuelve la lista de todos los autos. Acceso para empleados y encargados."""
     autos: List[Dict[str, Any]] = list(db.autos.find())
     return jsonify([serialize_document(a) for a in autos]), 200
 
 
 @app.route("/autos", methods=["POST"])
+@login_required
+@role_required('encargado')
 def crear_auto() -> Any:
     """Crea un registro de auto.
 
@@ -191,6 +238,8 @@ def crear_auto() -> Any:
 
 
 @app.route("/autos/<string:auto_id>", methods=["PUT"])
+@login_required
+@role_required('encargado')
 def actualizar_auto(auto_id: str) -> Any:
     """Actualiza los datos de un auto existente."""
     data: Dict[str, Any] = request.get_json(force=True) or {}
@@ -206,6 +255,8 @@ def actualizar_auto(auto_id: str) -> Any:
 
 
 @app.route("/autos/<string:auto_id>", methods=["DELETE", "POST"])
+@login_required
+@role_required('encargado')
 def eliminar_auto(auto_id: str) -> Any:
     """Elimina un auto de la colección."""
     try:
@@ -221,8 +272,10 @@ def eliminar_auto(auto_id: str) -> Any:
 
 
 @app.route("/autos/disponibles", methods=["GET"])
+@login_required
+@role_required('empleado', 'encargado')
 def autos_disponibles() -> Any:
-    """Lista los autos que tienen el campo `disponible` en True."""
+    """Lista los autos que tienen el campo `disponible` en True. Acceso para empleados y encargados."""
     autos: List[Dict[str, Any]] = list(db.autos.find({"disponible": True}))
     return jsonify([serialize_document(a) for a in autos]), 200
 
@@ -231,6 +284,7 @@ def autos_disponibles() -> Any:
 # ===========================================================================
 
 @app.route("/")
+@login_required
 def home() -> Any:
     """Página de inicio que muestra opciones principales."""
     return render_template("index.html")
@@ -241,6 +295,7 @@ def home() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/clientes/lista")
+@login_required
 def listar_clientes_html() -> Any:
     """Lista de clientes en una tabla HTML."""
     clientes: List[Dict[str, Any]] = list(db.clientes.find())
@@ -249,6 +304,7 @@ def listar_clientes_html() -> Any:
 
 
 @app.route("/clientes/nuevo", methods=["GET", "POST"])
+@role_required('empleado')
 def nuevo_cliente() -> Any:
     """Formulario para crear un nuevo cliente."""
     if request.method == "POST":
@@ -269,6 +325,7 @@ def nuevo_cliente() -> Any:
 
 
 @app.route("/clientes/<string:cliente_id>/editar", methods=["GET", "POST"])
+@role_required('empleado')
 def editar_cliente(cliente_id: str) -> Any:
     """Formulario para editar un cliente existente."""
     try:
@@ -297,6 +354,7 @@ def editar_cliente(cliente_id: str) -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/autos/lista")
+@login_required
 def listar_autos_html() -> Any:
     """Lista de autos en una tabla HTML."""
     autos: List[Dict[str, Any]] = list(db.autos.find())
@@ -305,6 +363,7 @@ def listar_autos_html() -> Any:
 
 
 @app.route("/autos/nuevo", methods=["GET", "POST"])
+@role_required('encargado')
 def nuevo_auto() -> Any:
     """Formulario para crear un nuevo auto."""
     if request.method == "POST":
@@ -324,6 +383,7 @@ def nuevo_auto() -> Any:
 
 
 @app.route("/autos/<string:auto_id>/editar", methods=["GET", "POST"])
+@role_required('encargado')
 def editar_auto(auto_id: str) -> Any:
     """Formulario para editar un auto existente."""
     try:
@@ -351,8 +411,13 @@ def editar_auto(auto_id: str) -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/reparaciones/lista")
+@login_required
+@role_required('encargado', 'dueno')
 def listar_reparaciones_html() -> Any:
-    """Lista de reparaciones en tabla HTML."""
+    """Lista de reparaciones en tabla HTML.
+
+    Solo accesible para usuarios con rol 'encargado' o 'dueno'.
+    """
     reparaciones: List[Dict[str, Any]] = list(db.reparaciones.find())
     # Convertir auto_id y formato de fecha
     reparaciones = [serialize_document(r) for r in reparaciones]
@@ -368,8 +433,13 @@ def listar_reparaciones_html() -> Any:
 
 
 @app.route("/reparaciones/nueva", methods=["GET", "POST"])
+@login_required
+@role_required('encargado')
 def nueva_reparacion() -> Any:
-    """Formulario para registrar una reparación."""
+    """Formulario para registrar una reparación.
+
+    Solo el usuario con rol 'encargado' puede crear nuevas reparaciones.
+    """
     autos_disponibles = [serialize_document(a) for a in db.autos.find()]
     if request.method == "POST":
         auto_id = request.form.get("auto_id")
@@ -414,7 +484,10 @@ def nueva_reparacion() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/rentas/lista")
+@login_required
+@role_required('empleado', 'encargado')
 def listar_rentas_html() -> Any:
+    """Lista de rentas para empleados y encargados."""
     rentas: List[Dict[str, Any]] = list(db.rentas.find())
     rentas = [serialize_document(r) for r in rentas]
     # Añadir nombres para auto y cliente
@@ -432,6 +505,8 @@ def listar_rentas_html() -> Any:
 
 
 @app.route("/rentas/nueva", methods=["GET", "POST"])
+@login_required
+@role_required('empleado')
 def nueva_renta() -> Any:
     """Formulario para crear una nueva renta."""
     # Listar autos disponibles
@@ -498,7 +573,10 @@ def nueva_renta() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/devoluciones/lista")
+@login_required
+@role_required('encargado')
 def listar_devoluciones_html() -> Any:
+    """Lista de devoluciones. Solo accesible para encargados."""
     devoluciones: List[Dict[str, Any]] = list(db.devoluciones.find())
     devoluciones = [serialize_document(d) for d in devoluciones]
     # Añadir datos de auto y cliente mediante la renta
@@ -518,6 +596,8 @@ def listar_devoluciones_html() -> Any:
 
 
 @app.route("/devoluciones/nueva", methods=["GET", "POST"])
+@login_required
+@role_required('encargado')
 def nueva_devolucion() -> Any:
     """Formulario para registrar devolución."""
     # Filtrar rentas activas
@@ -579,7 +659,10 @@ def nueva_devolucion() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/alertas/lista")
+@login_required
+@role_required('encargado')
 def listar_alertas_html() -> Any:
+    """Lista de alertas generadas. Solo accesible para encargados."""
     alertas: List[Dict[str, Any]] = list(db.alertas.find())
     alertas = [serialize_document(a) for a in alertas]
     # Añadir dato de auto
@@ -592,12 +675,81 @@ def listar_alertas_html() -> Any:
             pass
     return render_template("alertas.html", alertas=alertas)
 
+# ---------------------------------------------------------------------------
+# Rutas de Autenticación
+# ---------------------------------------------------------------------------
+
+@app.route("/login", methods=["GET", "POST"])
+def login() -> Any:
+    """Página de inicio de sesión.
+
+    El formulario solicita usuario y contraseña.  Si las credenciales son
+    correctas, se almacenan en la sesión el id y rol del usuario y se
+    redirige a la página principal.
+    """
+    error = None
+    if request.method == "POST":
+        username = request.form.get("usuario")
+        password = request.form.get("contrasena")
+        # Buscar usuario en la base de datos
+        usuario = db.usuarios.find_one({"usuario": username})
+        if usuario and check_password_hash(usuario.get("password_hash", ""), password):
+            # Autenticación exitosa
+            session['usuario_id'] = str(usuario['_id'])
+            session['rol'] = usuario.get('rol')
+            return redirect(url_for('home'))
+        else:
+            error = "Usuario o contraseña incorrectos"
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout() -> Any:
+    """Cierra la sesión y redirige al login."""
+    session.clear()
+    return redirect(url_for('login'))
+
+
+@app.route("/crear_usuarios_demo")
+def crear_usuarios_demo() -> Any:
+    """Ruta auxiliar para crear usuarios de ejemplo en la colección `usuarios`.
+
+    Esta función inserta tres usuarios con roles diferentes: empleado,
+    encargado y dueño.  Solo debe ejecutarse una vez y se debe eliminar o
+    deshabilitar en entornos reales para no exponer credenciales en texto
+    plano.
+    """
+    # Comprueba si ya existen usuarios para evitar duplicados
+    if db.usuarios.count_documents({}) > 0:
+        return "Usuarios ya existentes", 400
+    usuarios = [
+        {
+            "usuario": "empleado",
+            "password_hash": generate_password_hash("empleado123"),
+            "rol": "empleado"
+        },
+        {
+            "usuario": "encargado",
+            "password_hash": generate_password_hash("encargado123"),
+            "rol": "encargado"
+        },
+        {
+            "usuario": "dueno",
+            "password_hash": generate_password_hash("dueno123"),
+            "rol": "dueno"
+        },
+    ]
+    db.usuarios.insert_many(usuarios)
+    return "Usuarios de demostración creados", 201
+
 
 # ---------------------------------------------------------------------------
 # Rutas de Reparaciones (RF03 y RF04)
 # ---------------------------------------------------------------------------
 
 @app.route("/reparaciones", methods=["POST"])
+@login_required
+@role_required('encargado')
 def registrar_reparacion() -> Any:
     """Registra una reparación para un auto.
 
@@ -633,6 +785,8 @@ def registrar_reparacion() -> Any:
 
 
 @app.route("/reparaciones/consulta", methods=["GET"])
+@login_required
+@role_required('dueno', 'encargado')
 def consultar_reparaciones() -> Any:
     """Consulta reparaciones por periodo y costo (RF04).
 
@@ -673,6 +827,8 @@ def consultar_reparaciones() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/rentas", methods=["POST"])
+@login_required
+@role_required('empleado')
 def registrar_renta() -> Any:
     """Registra una renta nueva (RF05).
 
@@ -723,6 +879,8 @@ def registrar_renta() -> Any:
 
 
 @app.route("/rentas/<string:renta_id>", methods=["PUT"])
+@login_required
+@role_required('empleado')
 def actualizar_renta(renta_id: str) -> Any:
     """Actualiza una renta existente.
 
@@ -759,6 +917,8 @@ def actualizar_renta(renta_id: str) -> Any:
 
 
 @app.route("/rentas/ultimos", methods=["GET"])
+@login_required
+@role_required('encargado')
 def rentas_ultimos_meses() -> Any:
     """Devuelve las rentas registradas en los últimos dos meses (RF06)."""
     # Definimos 60 días como aproximación de dos meses
@@ -772,6 +932,8 @@ def rentas_ultimos_meses() -> Any:
 # ---------------------------------------------------------------------------
 
 @app.route("/devoluciones", methods=["POST"])
+@login_required
+@role_required('encargado')
 def registrar_devolucion() -> Any:
     """Registra la devolución de un auto (RF09).
 
@@ -827,6 +989,8 @@ def registrar_devolucion() -> Any:
 
 
 @app.route("/alertas", methods=["GET"])
+@login_required
+@role_required('encargado')
 def listar_alertas() -> Any:
     """Devuelve todas las alertas generadas por devoluciones en mal estado."""
     alertas: List[Dict[str, Any]] = list(db.alertas.find())

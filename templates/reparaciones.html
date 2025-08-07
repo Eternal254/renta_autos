@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Reparaciones</h2>
-  <a class="btn btn-primary" href="{{ url_for('nueva_reparacion') }}">Registrar Reparación</a>
+  {% if session.get('rol') == 'encargado' %}
+    <a class="btn btn-primary" href="{{ url_for('nueva_reparacion') }}">Registrar Reparación</a>
+  {% endif %}
 </div>
 <table class="table table-striped">
   <thead>
